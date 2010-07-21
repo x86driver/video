@@ -36,6 +36,7 @@ int main()
 	char *buf = (char*)&(fmt.fmt.pix.pixelformat);
 	printf("%c%c%c%c", buf[0], buf[1], buf[2], buf[3]);
 
+	printf("X: %d, Y: %d\n", fmt.fmt.pix.width, fmt.fmt.pix.height);
 	close(fd);
 	return 0;
 }
