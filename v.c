@@ -112,12 +112,16 @@ read_frame                      (void)
                 buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 buf.memory = V4L2_MEMORY_MMAP;
 
+		printf("before DQBUF\n");
                 if (-1 == xioctl (fd, VIDIOC_DQBUF, &buf)) {
+			printf("DQBUF error!!\n");
                         switch (errno) {
                         case EAGAIN:
+				printf("DQBUF EAGAIN\n");
                                 return 0;
 
                         case EIO:
+				printf("DQBUF EIO\n");
                                 /* Could ignore EIO, see spec. */
 
                                 /* fall through */
@@ -126,13 +130,16 @@ read_frame                      (void)
                                 errno_exit ("VIDIOC_DQBUF");
                         }
                 }
+		printf("DQBUF ok!\n");
 
                 assert (buf.index < n_buffers);
 
                 process_image (buffers[buf.index].start);
 
+		printf("before QBUF\n");
                 if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
                         errno_exit ("VIDIOC_QBUF");
+		printf("QBUF ok!\n");
 
                 break;
 
@@ -195,19 +202,19 @@ mainloop                        (void)
                         tv.tv_sec = 2;
                         tv.tv_usec = 0;
 
-                        r = select (fd + 1, &fds, NULL, NULL, &tv);
+//                        r = select (fd + 1, &fds, NULL, NULL, &tv);
 
-                        if (-1 == r) {
-                                if (EINTR == errno)
-                                        continue;
+//                        if (-1 == r) {
+//                                if (EINTR == errno)
+//                                        continue;
 
-                                errno_exit ("select");
-                        }
+//                                errno_exit ("select");
+//                        }
 
-                        if (0 == r) {
-                                fprintf (stderr, "select timeout\n");
-                                exit (EXIT_FAILURE);
-                        }
+//                        if (0 == r) {
+//                                fprintf (stderr, "select timeout\n");
+//                                exit (EXIT_FAILURE);
+//                        }
 
                         if (read_frame ())
                                 break;
@@ -246,6 +253,7 @@ start_capturing                 (void)
 
         switch (io) {
         case IO_METHOD_READ:
+		printf("Using read\n");
                 /* Nothing to do. */
                 break;
 
@@ -259,14 +267,17 @@ start_capturing                 (void)
                         buf.memory      = V4L2_MEMORY_MMAP;
                         buf.index       = i;
 
+			printf("VIDIOC_QBUF: %d\n", i);
                         if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
                                 errno_exit ("VIDIOC_QBUF");
                 }
                 
                 type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
+		printf("STREAM ON...\n");
                 if (-1 == xioctl (fd, VIDIOC_STREAMON, &type))
                         errno_exit ("VIDIOC_STREAMON");
+		printf("STREAM ON OK!\n");
 
                 break;
 
@@ -443,7 +454,7 @@ init_userp                      (unsigned int           buffer_size)
 }
 
 static void
-init_device                     (void)
+init_device                     (int x, int y)
 {
         struct v4l2_capability cap;
         struct v4l2_cropcap cropcap;
@@ -518,9 +529,9 @@ init_device                     (void)
         CLEAR (fmt);
 
         fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        fmt.fmt.pix.width       = 640; 
-        fmt.fmt.pix.height      = 480;
-        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        fmt.fmt.pix.width       = x; //original: 720x576
+        fmt.fmt.pix.height      = y;
+//        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
         fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
 
         if (-1 == xioctl (fd, VIDIOC_S_FMT, &fmt))
@@ -576,7 +587,7 @@ open_device                     (void)
                 exit (EXIT_FAILURE);
         }
 
-        fd = open (dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
+        fd = open (dev_name, O_RDWR /* required */ , 0);
 
         if (-1 == fd) {
                 fprintf (stderr, "Cannot open '%s': %d, %s\n",
@@ -584,7 +595,7 @@ open_device                     (void)
                 exit (EXIT_FAILURE);
         }
 
-
+/*
 	struct v4l2_format fmt;
 	memset((void*)&fmt, 0, sizeof(fmt));
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -592,7 +603,7 @@ open_device                     (void)
 	fmt.fmt.pix.height = 600;
 	ioctl(fd, VIDIOC_S_FMT, &fmt);
 	printf("X: %d, Y: %d\n", fmt.fmt.pix.width, fmt.fmt.pix.height);
-
+*/
 }
 
 static void
@@ -612,7 +623,7 @@ usage                           (FILE *                 fp,
                  argv[0]);
 }
 
-static const char short_options [] = "d:hmru";
+static const char short_options [] = "d:hmrux:y:";
 
 static const struct option
 long_options [] = {
@@ -621,6 +632,8 @@ long_options [] = {
         { "mmap",       no_argument,            NULL,           'm' },
         { "read",       no_argument,            NULL,           'r' },
         { "userp",      no_argument,            NULL,           'u' },
+	{ "x",          required_argument,      NULL,           'x' },
+	{ "y",          required_argument,      NULL,           'y' },
         { 0, 0, 0, 0 }
 };
 
@@ -629,6 +642,8 @@ main                            (int                    argc,
                                  char **                argv)
 {
         dev_name = "/dev/video0";
+	int width = 640;
+	int height = 480;
 
         for (;;) {
                 int index;
@@ -665,6 +680,12 @@ main                            (int                    argc,
                         io = IO_METHOD_USERPTR;
                         break;
 
+		case 'x':
+			width = atoi(optarg);
+			break;
+		case 'y':
+			height = atoi(optarg);
+			break;
                 default:
                         usage (stderr, argc, argv);
                         exit (EXIT_FAILURE);
@@ -673,12 +694,15 @@ main                            (int                    argc,
 
         open_device ();
 
-        init_device ();
+        init_device (width, height);
 
+	printf("start_capturing\n");
         start_capturing ();
 
+	printf("mainloop\n");
         mainloop ();
 
+	printf("stop_capturing\n");
         stop_capturing ();
 
         uninit_device ();

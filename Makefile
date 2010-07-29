@@ -1,15 +1,20 @@
-TARGET = v list yuv
+TARGET = v list yuv frame
+CC=arm-none-linux-gnueabi-gcc
+CFLAGS=-static
 
 all:$(TARGET)
 
 v:v.c
-	gcc -Wall -o $@ $<
+	$(CC) -Wall -o $@ $< $(CFLAGS)
 
 list:list.c
-	gcc -Wall -o $@ $<
+	$(CC) -Wall -o $@ $< $(CFLAGS)
 
 yuv:yuv.c
-	gcc -Wall -o $@ $<
+	$(CC) -Wall -o $@ $< $(CFLAGS)
+
+frame:frame.c
+	$(CC) -Wall -o $@ $< $(CFLAGS)
 
 clean:
 	rm -rf $(TARGET) *.raw
