@@ -21,7 +21,7 @@ void lookup(int state, int *n)
 			++number;
 		}
 		if (data[i] != state_table[state]) {
-			printf("0x%X 268 0x%X 1440\n", state_table[state], lookup_table[state]);
+			printf("\033[1;33m0x%X\033[0;38m 268 \033[1;34m0x%X\033[0;38m 1440\n", state_table[state], lookup_table[state]);
 			printf("====== %d times ======\n", number);
 			break;
 		}
@@ -46,6 +46,11 @@ void parse()
 		case 0xb6:
 			lookup(3, &i);
 			break;
+		case 0x80:
+		case 0xc7:
+		case 0xec:
+		case 0xab:
+			printf("Found 0x%X...\n", data[i]);
 		default:
 			++i;
 			break;
