@@ -6,8 +6,10 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <stdlib.h>
 
 #define FRAMEBUFFER "/dev/graphics/fb0"
+//#define FRAMEBUFFER "/dev/fb0"
 
 /*
 struct Pixel {
@@ -20,17 +22,20 @@ struct Pixel {
 int main()
 {
 	int fd = open(FRAMEBUFFER, O_RDWR);
+	if (fd == -1) {
+		perror("open");
+		exit(1);
+	}
 	struct fb_var_screeninfo screeninfo;
 	ioctl(fd, FBIOGET_VSCREENINFO, &screeninfo);
 	int width = screeninfo.xres;
 	int height = screeninfo.yres;
 
 	int x, y;
-	printf("x: %d, y: %d\n", width, height);
-//	pixel.r = 0x1f;
-//	pixel.g = pixel.b = 0;
+	printf("x: %d, y: %d, pixel: %d\n", width, height, screeninfo.bits_per_pixel);
 
-	unsigned short *data = (unsigned short *)mmap(NULL, width*height*2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+
+	unsigned short *data = (unsigned short *)mmap(NULL, width*height*2, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
 
 	for (x = 0; x < height; ++x) {
 		for (y = 0; y < width; ++y) {
@@ -40,7 +45,18 @@ int main()
 
 	munmap(data, width*height);
 
+/*
+	unsigned char *buf = malloc(480*272*4);
+	for (x = 0; x < 480*272*2; x+=4) {
+		buf[x] = 0xff;
+		buf[x+1] = 0x00;
+		buf[x+2] = 0;
+		buf[x+3] = 0;
+	}
 
+	write(fd, buf, 480*272*4);
+	free(buf);
+*/
 	close(fd);
 	return 0;
 }
