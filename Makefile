@@ -1,4 +1,4 @@
-TARGET = v list yuv frame show eav parse parse2
+TARGET = v list yuv frame show eav parse parse2 fake
 ARMCC=arm-none-linux-gnueabi-gcc
 CC=gcc
 CFLAGS=-static
@@ -28,6 +28,9 @@ parse2:parse2.c
 
 show:show.c
 	$(ARMCC) -Wall -o $@ $< $(CFLAGS)
+
+fake:fake.c
+	$(CC) -Wall -o $@ $<
 
 clean:
 	rm -rf $(TARGET) *.raw
