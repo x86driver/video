@@ -5,8 +5,7 @@ struct RGB {
 } __attribute__((packed));
 
 struct YUV {
-	unsigned char y1, u, y2, v;
-//	unsigned char y2, v, y1, u;
+	unsigned char y1, u, y2, v; //ok in Notebook
 } __attribute__((packed));
 
 int main()
