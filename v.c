@@ -643,7 +643,7 @@ main                            (int                    argc,
 {
         dev_name = "/dev/video0";
 	int width = 720;
-	int height = 576;
+	int height = 480;
 
         for (;;) {
                 int index;
