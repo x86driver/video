@@ -1,4 +1,4 @@
-TARGET = v list yuv frame
+TARGET = v list yuv frame show
 CC=arm-none-linux-gnueabi-gcc
 CFLAGS=-static
 
@@ -14,6 +14,9 @@ yuv:yuv.c
 	$(CC) -Wall -o $@ $< $(CFLAGS)
 
 frame:frame.c
+	$(CC) -Wall -o $@ $< $(CFLAGS)
+
+show:show.c
 	$(CC) -Wall -o $@ $< $(CFLAGS)
 
 clean:
