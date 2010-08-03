@@ -1,5 +1,6 @@
-TARGET = v list yuv frame
-CC=arm-none-linux-gnueabi-gcc
+TARGET = v list yuv frame eav parse parse2
+#CC=arm-none-linux-gnueabi-gcc
+CC=gcc
 CFLAGS=-static
 
 all:$(TARGET)
@@ -15,6 +16,15 @@ yuv:yuv.c
 
 frame:frame.c
 	$(CC) -Wall -o $@ $< $(CFLAGS)
+
+eav:eav.c
+	gcc -Wall -o $@ $< $(CFLAGS)
+
+parse:parse.c
+	gcc -Wall -o $@ $< -g
+
+parse2:parse2.c
+	gcc -Wall -o $@ $< -g
 
 clean:
 	rm -rf $(TARGET) *.raw
