@@ -43,6 +43,9 @@ static io_method        io              = IO_METHOD_MMAP;
 static int              fd              = -1;
 struct buffer *         buffers         = NULL;
 static unsigned int     n_buffers       = 0;
+unsigned short *data = NULL;
+int fbfd = 0;
+#define FRAMEBUFFER "/dev/graphics/fb0"
 
 static void
 errno_exit                      (const char *           s)
@@ -69,14 +72,17 @@ xioctl                          (int                    fd,
 static void
 process_image                   (const void *           p)
 {
+/*
 	int outfd = open("my.raw", O_CREAT|O_WRONLY, 00644);
 	if (outfd == -1)
 		perror("open");
 	printf("\nSize: %d\n", buffers[0].length);
 	write(outfd, buffers[0].start, buffers[0].length);
+*/
+	memcpy(data, buffers[0].start, 480*272*2);
         fputc ('.', stdout);
         fflush (stdout);
-	close(outfd);
+//	close(outfd);
 }
 
 static int
@@ -187,9 +193,10 @@ mainloop                        (void)
 {
         unsigned int count;
 
-        count = 1;
+        count = 100;
 
-        while (count-- > 0) {
+//        while (count-- > 0) {
+	while (1) {
                 for (;;) {
                         fd_set fds;
                         struct timeval tv;
@@ -637,13 +644,19 @@ long_options [] = {
         { 0, 0, 0, 0 }
 };
 
+void init_fb()
+{
+	fbfd = open(FRAMEBUFFER, O_RDWR);
+	data = (unsigned short*)mmap(NULL, 480*272*2, PROT_READ|PROT_WRITE, MAP_SHARED, fbfd, 0);
+}
+
 int
 main                            (int                    argc,
                                  char **                argv)
 {
         dev_name = "/dev/video0";
 	int width = 720;
-	int height = 576;
+	int height = 480;
 
         for (;;) {
                 int index;
@@ -691,6 +704,8 @@ main                            (int                    argc,
                         exit (EXIT_FAILURE);
                 }
         }
+
+	init_fb();
 
         open_device ();
 
