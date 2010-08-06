@@ -1,4 +1,4 @@
-TARGET = v list yuv frame show eav parse parse2 fake trans
+TARGET = v list yuv frame show eav parse parse2 fake trans overlay
 ARMCC=arm-none-linux-gnueabi-gcc
 CC=gcc
 CFLAGS=-static
@@ -34,6 +34,9 @@ fake:fake.c
 
 trans:trans.c
 	$(CC) -Wall -o $@ $<
+
+overlay:overlay.c
+	$(ARMCC) -Wall -o $@ $< $(CFLAGS)
 
 clean:
 	rm -rf $(TARGET) *.raw
