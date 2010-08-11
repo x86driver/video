@@ -69,7 +69,7 @@ xioctl                          (int                    fd,
 static void
 process_image                   (const void *           p)
 {
-	int outfd = open("my.raw", O_CREAT|O_WRONLY, 00644);
+	int outfd = open("my.raw", O_CREAT|O_WRONLY|O_TRUNC, 00644);
 	if (outfd == -1)
 		perror("open");
 	printf("\nSize: %d\n", buffers[0].length);
@@ -531,8 +531,13 @@ init_device                     (int x, int y)
         fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.width       = x; //original: 720x576
         fmt.fmt.pix.height      = y;
-        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+//        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
 //        fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+
+	if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
+		printf("Output is YUV422\n");
+	else
+		printf("Output is YUV420\n");
 
         if (-1 == xioctl (fd, VIDIOC_S_FMT, &fmt))
                 errno_exit ("VIDIOC_S_FMT");
