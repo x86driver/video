@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SIZE 256
+#define SIZE 1048576
 unsigned char *data;
 unsigned char state_table[] = {0x9d, 0xda, 0xf1, 0xb6};
 unsigned char lookup_table[] = {0x80, 0xc7, 0xec, 0xab};
@@ -32,7 +32,7 @@ void lookup(int state, int *n)
 void parse()
 {
 	int i = 0;
-	while (i <= count) {
+	while (i < count) {
 		switch (data[i]) {
 		case 0x9d:
 			lookup(0, &i);
