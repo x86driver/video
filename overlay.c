@@ -30,19 +30,15 @@ int main()
 		perror("ioctl");
 	}
 
-	unsigned char *buf = (unsigned char*)mmap(NULL, 480*272*2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-	if ((int)buf == -1) {
-		perror("mmap");
-	}
+	unsigned char *buf = malloc(480*272*2);
+	if ((int)buf == -1)
+		perror("malloc");
 
-	unsigned int i;
-	unsigned char *ptr = buf;
-	for (i = 0; i < 480*272; ++i) {
-		*ptr++ = 0x55;
-		*ptr++ = 0x55;
-	}
+	memset(buf, 0x55, 480*272*2);
 
-	munmap(buf, 480*272*2);
+	ret = ioctl(fd, 3, buf);
+
+	free(buf);
 	close(fd);
 
 	return 0;
