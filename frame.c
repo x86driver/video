@@ -8,16 +8,17 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 
-#define FRAMEBUFFER "/dev/graphics/fb0"
+//#define FRAMEBUFFER "/dev/graphics/fb0"
+#define FRAMEBUFFER "/dev/overlay"
 //#define FRAMEBUFFER "/dev/fb0"
 
-/*
+
 struct Pixel {
 	unsigned char r:5;
 	unsigned char g:6;
 	unsigned char b:5;
 } __attribute__((packed)) pixel;
-*/
+
 
 int main()
 {
@@ -35,11 +36,12 @@ int main()
 	printf("x: %d, y: %d, pixel: %d\n", width, height, screeninfo.bits_per_pixel);
 
 
-	unsigned short *data = (unsigned short *)mmap(NULL, width*height*2, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+	unsigned char *data = (unsigned char *)mmap(NULL, width*height*(screeninfo.bits_per_pixel/8),
+		PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 
 	for (x = 0; x < height; ++x) {
 		for (y = 0; y < width; ++y) {
-			data[y + x * width] = 0x07e0;
+			data[y + x * width] = 0x55;
 		}
 	}
 
