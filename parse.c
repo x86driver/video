@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SIZE 133100
+#define SIZE 1048576
 unsigned char *data;
 enum State {STATUS, COUNT} state;
 
@@ -69,8 +69,8 @@ int main()
 		++i;
 	}
 //	printf("count: %d\n", i);
-	free(data);
 	fclose(fp);
 	parse(i);
+	free(data);
 	return 0;
 }
