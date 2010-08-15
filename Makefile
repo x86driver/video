@@ -1,4 +1,4 @@
-TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv
+TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv rgb565
 ARMCC=arm-none-linux-gnueabi-gcc
 CC=gcc
 CFLAGS=-static
@@ -42,6 +42,9 @@ seq:seq.c
 	$(CC) -Wall -o $@ $< -g
 
 conv:conv.c
+	$(CC) -Wall -o $@ $< -g
+
+rgb565:rgb565.c
 	$(CC) -Wall -o $@ $< -g
 
 clean:
