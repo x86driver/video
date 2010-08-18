@@ -67,15 +67,16 @@ xioctl                          (int                    fd,
 }
 
 static void
-process_image                   (const void *           p)
+process_image                   (const void *           p, int index)
 {
-	int outfd = open("my.raw", O_CREAT|O_WRONLY|O_TRUNC, 00644);
+	char filename[80];
+	snprintf(filename, sizeof(filename), "my%d.raw", index);
+	int outfd = open(filename, O_CREAT|O_WRONLY|O_TRUNC, 00644);
 	if (outfd == -1)
 		perror("open");
-	printf("\nSize: %d\n", buffers[0].length);
-	write(outfd, buffers[0].start, buffers[0].length);
-        fputc ('.', stdout);
-        fflush (stdout);
+	printf("\nSize: %d\n", buffers[index].length);
+	write(outfd, buffers[index].start, buffers[index].length);
+	printf("Output file: %s\n", filename);
 	close(outfd);
 }
 
@@ -102,7 +103,7 @@ read_frame                      (void)
                         }
                 }
 
-                process_image (buffers[0].start);
+                process_image (buffers[0].start, 0);
 
                 break;
 
@@ -130,11 +131,11 @@ read_frame                      (void)
                                 errno_exit ("VIDIOC_DQBUF");
                         }
                 }
-		printf("DQBUF ok!\n");
+		printf("DQBUF ok! I get [%d] buffer\n", buf.index);
 
                 assert (buf.index < n_buffers);
 
-                process_image (buffers[buf.index].start);
+                process_image (buffers[buf.index].start, buf.index);
 
 		printf("before QBUF\n");
                 if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
@@ -171,7 +172,7 @@ read_frame                      (void)
 
                 assert (i < n_buffers);
 
-                process_image ((void *) buf.m.userptr);
+                process_image ((void *) buf.m.userptr, 0);
 
                 if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
                         errno_exit ("VIDIOC_QBUF");
@@ -191,37 +192,11 @@ mainloop                        (void)
 
         while (count-- > 0) {
                 for (;;) {
-                        fd_set fds;
-                        struct timeval tv;
-                        int r;
-
-                        FD_ZERO (&fds);
-                        FD_SET (fd, &fds);
-
-                        /* Timeout. */
-                        tv.tv_sec = 2;
-                        tv.tv_usec = 0;
-
-//                        r = select (fd + 1, &fds, NULL, NULL, &tv);
-
-//                        if (-1 == r) {
-//                                if (EINTR == errno)
-//                                        continue;
-
-//                                errno_exit ("select");
-//                        }
-
-//                        if (0 == r) {
-//                                fprintf (stderr, "select timeout\n");
-//                                exit (EXIT_FAILURE);
-//                        }
-
                         if (read_frame ())
                                 break;
-        
-                        /* EAGAIN - continue select loop. */
                 }
-        }
+		sleep(2);
+	}
 }
 
 static void
@@ -267,11 +242,10 @@ start_capturing                 (void)
                         buf.memory      = V4L2_MEMORY_MMAP;
                         buf.index       = i;
 
-			printf("VIDIOC_QBUF: %d\n", i);
                         if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
                                 errno_exit ("VIDIOC_QBUF");
                 }
-                
+                printf("I queued %d buffers!\n", n_buffers);
                 type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
 		printf("STREAM ON...\n");
@@ -370,6 +344,7 @@ init_mmap                       (void)
                         errno_exit ("VIDIOC_REQBUFS");
                 }
         }
+
 
         if (req.count < 2) {
                 fprintf (stderr, "Insufficient buffer memory on %s\n",
