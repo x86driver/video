@@ -31,13 +31,14 @@ int fd;
 #define HEIGHT 240
 #define BUFFER_COUNT 4
 
-void uninit_mmap()
+void uninit()
 {
 	unsigned int i;
         for (i = 0; i < BUFFER_COUNT; ++i) {
                 if (-1 == munmap (buffers[i].start, buffers[i].length))
                         perror ("munmap");
         }
+	free(buffers);
 }
 
 void stream_on()
@@ -60,7 +61,8 @@ static void
 process_image                   (const void *           p, int index)
 {
         char filename[80];
-        snprintf(filename, sizeof(filename), "my%d.raw", index);
+	static int outindex = 0;
+        snprintf(filename, sizeof(filename), "my%d.raw", outindex++);
         int outfd = open(filename, O_CREAT|O_WRONLY|O_TRUNC, 00644);
         if (outfd == -1)
                 perror("open");
@@ -188,13 +190,18 @@ void queue_buffer()
         }
 }
 
+void open_device()
+{
+        fd = open("/dev/video0", O_RDWR);
+        if (fd == -1) {
+                perror("open");
+                exit(1);
+        }
+}
+
 int main()
 {
-	fd = open("/dev/video0", O_RDWR);
-	if (fd == -1) {
-		perror("open");
-		exit(1);
-	}
+	open_device();
 
 	request_buffer();
 
@@ -208,9 +215,21 @@ int main()
 
 	stream_off();
 
-	uninit_mmap();
+	uninit();
 
 	close(fd);
+
+	// second time
+	open_device();
+	request_buffer();
+	query_buffer();
+	queue_buffer();
+	stream_on();
+	read_frame();
+	stream_off();
+	uninit();
+	close(fd);
+
 	return 0;
 }
 
