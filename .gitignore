@@ -16,3 +16,6 @@ raw
 seq
 conv
 rgb565
+c
+resize
+rgbconv
