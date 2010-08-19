@@ -1,9 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <linux/fb.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
 
 #define WIDTH 720
 #define HEIGHT 240
+#define FRAMEBUFFER "/dev/graphics/fb0"
 
 double YuvToRgb[3][3]= {{1,      0, 1.4022},
                         {1,   -0.3456,-0.7145},
@@ -21,7 +28,6 @@ void rgb888to565(unsigned char *rgb888, unsigned short *rgb565)
 {
         unsigned int i = 0;
         unsigned char r,g,b;
-	unsigned short *picture = rgb565;
         for (; i < 480*240; ++i) {
                 r = *rgb888++;
                 g = *rgb888++;
@@ -31,13 +37,6 @@ void rgb888to565(unsigned char *rgb888, unsigned short *rgb565)
                 b /= 8;
                 *rgb565++ = (r << 11) | (g << 5) | b;
         }
-	FILE *fp = fopen("out565.raw", "wb");
-	if (!fp) {
-		perror("fopen");
-	}
-	fwrite(picture, 480*240*2, 1, fp);
-	printf("Output file: out565.raw\n");
-	fclose(fp);
 }
 
 void resize(unsigned char *inbuf, unsigned char *outbuf)
@@ -122,6 +121,39 @@ int Convert(char *file,int width,int height)
 	return 0;
 }
 
+void init_framebuffer()
+{
+        int fd = open(FRAMEBUFFER, O_RDWR);
+        if (fd == -1) {
+                perror("open");
+                exit(1);
+        }
+        struct fb_var_screeninfo screeninfo;
+        ioctl(fd, FBIOGET_VSCREENINFO, &screeninfo);
+        int width = screeninfo.xres;
+        int height = screeninfo.yres;
+
+        PICTURE_BUFFER = (unsigned short *)mmap(NULL, width*height*(screeninfo.bits_per_pixel/8),
+                PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+
+        if (PICTURE_BUFFER == MAP_FAILED) {
+                perror("mmap");
+                exit(1);
+        }
+}
+
+void init_memory()
+{
+        RGB888_BUFFER = (unsigned char*)malloc(WIDTH*HEIGHT*3);
+        RESIZE_BUFFER = (unsigned char*)malloc(480*240*3);
+}
+
+void free_memory()
+{
+        free(RGB888_BUFFER);
+        free(RESIZE_BUFFER);
+}
+
 int main(int argc, char **argv)
 {
 	if (argc != 2) {
@@ -129,14 +161,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	RGB888_BUFFER = (unsigned char*)malloc(WIDTH*HEIGHT*3);
-	RESIZE_BUFFER = (unsigned char*)malloc(480*240*3);
-	PICTURE_BUFFER = (unsigned short*)malloc(480*240*2);
+	init_framebuffer();
+
+	init_memory();
 
 	Convert(argv[1], WIDTH, HEIGHT);
 
-	free(RGB888_BUFFER);
-	free(RESIZE_BUFFER);
-	free(PICTURE_BUFFER);
+	free_memory();
 	return 0;
 }
