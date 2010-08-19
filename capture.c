@@ -219,17 +219,6 @@ int main()
 
 	close(fd);
 
-	// second time
-	open_device();
-	request_buffer();
-	query_buffer();
-	queue_buffer();
-	stream_on();
-	read_frame();
-	stream_off();
-	uninit();
-	close(fd);
-
 	return 0;
 }
 

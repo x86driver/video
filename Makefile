@@ -27,7 +27,7 @@ parse2:parse2.c
 	gcc -Wall -o $@ $< -g
 
 show:show.c
-	$(ARMCC) -Wall -o $@ $< $(CFLAGS)
+	$(ARMCC) -O2 -Wall -o $@ $< $(CFLAGS)
 
 fake:fake.c
 	$(CC) -Wall -o $@ $<
