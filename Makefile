@@ -1,4 +1,4 @@
-TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv rgb565 rgbconv resize c
+TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv rgb565 rgbconv resize c play
 ARMCC=arm-none-linux-gnueabi-gcc
 CC=gcc
 CFLAGS=-static
@@ -55,6 +55,9 @@ resize:resize.c
 
 c:capture.c
 	$(ARMCC) -Wall -o c $< -g $(CFLAGS)
+
+play:play.c
+	$(ARMCC) -Wall -O2 -o $@ $< $(CFLAGS)
 
 clean:
 	rm -rf $(TARGET) *.raw

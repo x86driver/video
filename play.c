@@ -247,7 +247,7 @@ int read_frame()
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
 
-	printf("before DQBUF\n");
+//	printf("before DQBUF\n");
 	if (-1 == ioctl (fd, VIDIOC_DQBUF, &buf)) {
 		printf("DQBUF error!!\n");
 		switch (errno) {
@@ -265,14 +265,14 @@ int read_frame()
 		  perror ("VIDIOC_DQBUF");
 		}
 	}
-	printf("DQBUF ok! I get [%d] buffer\n", buf.index);
+//	printf("DQBUF ok! I get [%d] buffer\n", buf.index);
 
 	process_image (buffers[buf.index].start, buf.index);
 
-	printf("before QBUF\n");
+//	printf("before QBUF\n");
 	if (-1 == ioctl (fd, VIDIOC_QBUF, &buf))
 	  perror ("VIDIOC_QBUF");
-	printf("QBUF ok!\n");
+//	printf("QBUF ok!\n");
 
 
         return 1;
