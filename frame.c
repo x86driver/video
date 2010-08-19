@@ -8,20 +8,18 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 
-//#define FRAMEBUFFER "/dev/graphics/fb0"
-#define FRAMEBUFFER "/dev/overlay"
+#define FRAMEBUFFER "/dev/graphics/fb0"
+//#define FRAMEBUFFER "/dev/overlay"
 //#define FRAMEBUFFER "/dev/fb0"
 
 
-struct Pixel {
-	unsigned char r:5;
-	unsigned char g:6;
-	unsigned char b:5;
-} __attribute__((packed)) pixel;
-
-
-int main()
+int main(int argc, char **argv)
 {
+	if (argc != 2) {
+		printf("Usage: %s [RGB565 file]\n", argv[0]);
+		exit(1);
+	}
+
 	int fd = open(FRAMEBUFFER, O_RDWR);
 	if (fd == -1) {
 		perror("open");
@@ -39,12 +37,25 @@ int main()
 	unsigned char *data = (unsigned char *)mmap(NULL, width*height*(screeninfo.bits_per_pixel/8),
 		PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 
+	if (data == MAP_FAILED) {
+		perror("mmap");
+		exit(1);
+	}
+
+	FILE *fp = fopen(argv[1], "rb");
+	if (!fp) {
+		perror("fopen");
+		exit(1);
+	}
+	fread(data, 480*240*2, 1, fp);
+	fclose(fp);
+/*
 	for (x = 0; x < height; ++x) {
 		for (y = 0; y < width; ++y) {
 			data[y + x * width] = 0x55;
 		}
 	}
-
+*/
 	munmap(data, width*height);
 
 /*
