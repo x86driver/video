@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <linux/fb.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <linux/fb.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #define WIDTH 720
 #define HEIGHT 240
@@ -23,6 +24,8 @@ struct RGB {
 unsigned short *PICTURE_BUFFER;
 unsigned char *RGB888_BUFFER;
 unsigned char *RESIZE_BUFFER;
+unsigned char* yuv= NULL;
+unsigned char* rgb= NULL;
 
 void rgb888to565(unsigned char *rgb888, unsigned short *rgb565)
 {
@@ -69,27 +72,13 @@ void YUV2RGB(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char
 	resize(rgb888, RESIZE_BUFFER);
 }
 
-int Convert(char *file,int width,int height)
+int Convert(int width, int height)
 {
 	int temp= 0;
 	int x= 0;
 	int y= 0;
-	int fReadSize= 0;
 	int ImgSize= width*height;
-	FILE*fp= NULL;
-	unsigned char* yuv= NULL;
-	unsigned char* rgb= NULL;
 	unsigned char* cTemp[6];
-
-	int FrameSize= ImgSize+ (ImgSize>> 1);
-	yuv= (unsigned char *)malloc(FrameSize);
-	rgb= (unsigned char *)malloc(ImgSize*3);
-
-	if((fp= fopen(file,"rb"))== NULL)
-		return 0;
-
-	fReadSize= fread(yuv,1, FrameSize, fp);
-	fclose(fp);
 
 	cTemp[0]= yuv;                       //y分量地址
 	cTemp[1]= yuv+ ImgSize;           //u分量地址
@@ -116,8 +105,8 @@ int Convert(char *file,int width,int height)
 	//写到BMP文件中
 	YUV2RGB(cTemp[3], cTemp[4], cTemp[5], RGB888_BUFFER);
 
-	free(yuv);
-	free(rgb);
+	//free(yuv);
+	//free(rgb);
 	return 0;
 }
 
@@ -140,18 +129,38 @@ void init_framebuffer()
                 perror("mmap");
                 exit(1);
         }
+	close(fd);
 }
 
 void init_memory()
 {
+        int ImgSize= WIDTH*HEIGHT;
+        int FrameSize= ImgSize+ (ImgSize>> 1);
+        yuv= (unsigned char *)malloc(FrameSize);
+        rgb= (unsigned char *)malloc(ImgSize*3);
         RGB888_BUFFER = (unsigned char*)malloc(WIDTH*HEIGHT*3);
         RESIZE_BUFFER = (unsigned char*)malloc(480*240*3);
+	if (yuv == NULL || rgb == NULL || RGB888_BUFFER == NULL || RESIZE_BUFFER == NULL)
+		perror("malloc");
 }
 
 void free_memory()
 {
         free(RGB888_BUFFER);
         free(RESIZE_BUFFER);
+        free(yuv);
+        free(rgb);
+}
+
+void init_file_read(const char *filename)
+{
+        FILE *fp = fopen(filename, "rb");
+        if (!fp)
+                perror("fopen");
+        int ImgSize= WIDTH*HEIGHT;
+        int FrameSize= ImgSize+ (ImgSize>> 1);
+        fread(yuv,1, FrameSize, fp);
+        fclose(fp);
 }
 
 int main(int argc, char **argv)
@@ -161,11 +170,13 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	init_framebuffer();
-
 	init_memory();
 
-	Convert(argv[1], WIDTH, HEIGHT);
+	init_file_read(argv[1]);
+
+	init_framebuffer();
+
+	Convert(WIDTH, HEIGHT);
 
 	free_memory();
 	return 0;
