@@ -6,7 +6,7 @@ CFLAGS=-static
 all:$(TARGET)
 
 v:v.c
-	$(ARMCC) -Wall -o $@ $< $(CFLAGS)
+	$(CC) -Wall -o $@ $< $(CFLAGS)
 
 list:list.c
 	$(ARMCC) -Wall -o $@ $< $(CFLAGS)

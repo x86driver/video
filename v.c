@@ -195,7 +195,6 @@ mainloop                        (void)
                         if (read_frame ())
                                 break;
                 }
-		sleep(2);
 	}
 }
 
@@ -506,7 +505,7 @@ init_device                     (int x, int y)
         fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.width       = x; //original: 720x576
         fmt.fmt.pix.height      = y;
-//        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
 //        fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
 
 	if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
