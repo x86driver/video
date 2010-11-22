@@ -45,6 +45,8 @@ struct buffer *         buffers         = NULL;
 struct buffer *		outbuffers	= NULL;
 static unsigned int     n_buffers       = 0;
 int global_width, global_height;
+unsigned int global_count;
+unsigned int global_interval;
 
 struct RGB {
 	unsigned char r,g,b;
@@ -100,7 +102,7 @@ void yuv2rgb(int index)
 		rgb.b = b;
 		fwrite((void*)&rgb, sizeof(rgb), 1, out);
 	} while (count < global_width*global_height*2);
-	printf("Write %d bytes\n", count);
+	fflush(NULL);
 }
 
 static void
@@ -128,6 +130,9 @@ xioctl                          (int                    fd,
 static void
 process_image                   (const void *           p, int index)
 {
+	static unsigned int i = 0;
+	printf("Process image [%d/%d]...\r", i++, global_count);
+	fflush(NULL);
 	yuv2rgb(index);
 }
 
@@ -164,7 +169,6 @@ read_frame                      (void)
                 buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 buf.memory = V4L2_MEMORY_MMAP;
 
-		printf("before DQBUF\n");
                 if (-1 == xioctl (fd, VIDIOC_DQBUF, &buf)) {
 			printf("DQBUF error!!\n");
                         switch (errno) {
@@ -182,16 +186,14 @@ read_frame                      (void)
                                 errno_exit ("VIDIOC_DQBUF");
                         }
                 }
-		printf("DQBUF ok! I get [%d] buffer\n", buf.index);
+//		printf("DQBUF ok! I get [%d] buffer\n", buf.index);
 
                 assert (buf.index < n_buffers);
 
                 process_image (buffers[buf.index].start, buf.index);
 
-		printf("before QBUF\n");
                 if (-1 == xioctl (fd, VIDIOC_QBUF, &buf))
                         errno_exit ("VIDIOC_QBUF");
-		printf("QBUF ok!\n");
 
                 break;
 
@@ -239,14 +241,14 @@ mainloop                        (void)
 {
         unsigned int count;
 
-        count = 10;
+        count = global_count;
 
         while (count-- > 0) {
                 for (;;) {
                         if (read_frame ())
                                 break;
                 }
-		sleep(1);
+		sleep(global_interval);
 	}
 }
 
@@ -652,11 +654,13 @@ usage                           (FILE *                 fp,
                  "-m | --mmap          Use memory mapped buffers\n"
                  "-r | --read          Use read() calls\n"
                  "-u | --userp         Use application allocated buffers\n"
+                 "-c | --count         How many frame will be captured\n"
+                 "-i | --interval      The interval of one frame between the second frame\n"
                  "",
                  argv[0]);
 }
 
-static const char short_options [] = "d:hmrux:y:";
+static const char short_options [] = "d:hmrux:y:c:i:";
 
 static const struct option
 long_options [] = {
@@ -667,6 +671,8 @@ long_options [] = {
         { "userp",      no_argument,            NULL,           'u' },
 	{ "x",          required_argument,      NULL,           'x' },
 	{ "y",          required_argument,      NULL,           'y' },
+	{ "count",	required_argument,	NULL,		'c' },
+	{ "interval",	required_argument,	NULL,		'i' },
         { 0, 0, 0, 0 }
 };
 
@@ -675,8 +681,8 @@ main                            (int                    argc,
                                  char **                argv)
 {
         dev_name = "/dev/video0";
-	int width = 720;
-	int height = 480;
+	int width = 800;
+	int height = 600;
 
 	out = fopen("out2.raw", "wb");
         for (;;) {
@@ -720,6 +726,12 @@ main                            (int                    argc,
 		case 'y':
 			height = atoi(optarg);
 			break;
+		case 'c':
+			global_count = atoi(optarg);
+			break;
+		case 'i':
+			global_interval = atoi(optarg);
+			break;
                 default:
                         usage (stderr, argc, argv);
                         exit (EXIT_FAILURE);
@@ -739,6 +751,7 @@ main                            (int                    argc,
 	printf("mainloop\n");
         mainloop ();
 
+	printf("\n");
 	printf("stop_capturing\n");
         stop_capturing ();
 
