@@ -59,6 +59,20 @@ struct YUV {
 
 FILE *out;
 
+struct RGB *image;
+struct RGB *image_ptr;
+
+inline void my_fwrite(const void *ptr)
+{
+	*image_ptr++ = *(struct RGB*)ptr;
+}
+
+inline void my_fflush(void *ptr)
+{
+	fwrite((void*)image, global_width*global_height*3, 1, out);
+	fflush(ptr);
+}
+
 void yuv2rgb(int index)
 {
 	struct RGB rgb;
@@ -70,6 +84,7 @@ void yuv2rgb(int index)
 	if (!out)
 		exit(1);
 
+	image_ptr = image;
 	do {
 		memcpy((void*)&yuv, buffers[index].start + count, sizeof(struct YUV));
 		count += sizeof(struct YUV);
@@ -86,7 +101,7 @@ void yuv2rgb(int index)
 		rgb.r = r;
 		rgb.g = g;
 		rgb.b = b;
-		fwrite((void*)&rgb, sizeof(rgb), 1, out);
+		my_fwrite((void*)&rgb);
 
                 r = yuv.y2 + (1.4075*(yuv.v-128));
                 g = yuv.y2 - (0.3455*(yuv.u-128)-(0.7169*(yuv.v-128)));
@@ -100,9 +115,9 @@ void yuv2rgb(int index)
 		rgb.r = r;
 		rgb.g = g;
 		rgb.b = b;
-		fwrite((void*)&rgb, sizeof(rgb), 1, out);
+		my_fwrite((void*)&rgb);
 	} while (count < global_width*global_height*2);
-	fflush(NULL);
+	my_fflush(NULL);
 }
 
 static void
@@ -641,6 +656,18 @@ open_device                     (void)
 */
 }
 
+void init_image()
+{
+	image = malloc(global_width*global_height*sizeof(struct RGB));
+	if (!image)
+		perror("malloc");
+}
+
+void free_image()
+{
+	free(image);
+}
+
 static void
 usage                           (FILE *                 fp,
                                  int                    argc,
@@ -738,28 +765,30 @@ main                            (int                    argc,
                 }
         }
 
-        open_device ();
-
 	global_width = width;
 	global_height = height;
 
+	open_device ();
+
+	init_image();
+
         init_device (width, height);
 
-	printf("start_capturing\n");
         start_capturing ();
 
-	printf("mainloop\n");
         mainloop ();
 
-	printf("\n");
-	printf("stop_capturing\n");
         stop_capturing ();
 
         uninit_device ();
 
         close_device ();
 
+	free_image();
+
         exit (EXIT_SUCCESS);
+
+	printf("\n");
 
         return 0;
 }
