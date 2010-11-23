@@ -21,3 +21,7 @@ resize
 rgbconv
 play
 stream
+*.ttf
+*.TTF
+*.exe
+free
