@@ -11,7 +11,7 @@
 #define WIDTH 800
 #define HEIGHT 600
 
-unsigned char image[600][800][3];
+unsigned char image[600*800][3];
 
 FT_Library library;
 FT_Face face;
@@ -34,8 +34,8 @@ void draw_bitmap( FT_Bitmap*  bitmap,
 			if ( i >= WIDTH || j >= HEIGHT )
 			  continue;
 
-			image[j][i][0] = bitmap->buffer[q * bitmap->width + p];
-			image[j][i][1] = image[j][i][0];
+			image[j*WIDTH+i][0] = bitmap->buffer[q * bitmap->width + p];
+			image[j*WIDTH+i][1] = image[j*WIDTH+i][0];
 		}
 	}
 }
@@ -45,7 +45,7 @@ void drawtext(wchar_t *text)
 	setlocale(LC_CTYPE, "zh_TW.UTF-8");
 
 	FT_Init_FreeType( &library );
-	FT_New_Face( library, "times.ttf", 0, &face );
+	FT_New_Face( library, "courier.ttf", 0, &face );
 	FT_Set_Char_Size( face, 0, FONT_SIZE * 64,
 			  100, 100 );
 
@@ -92,7 +92,7 @@ void drawtext(wchar_t *text)
 
 int main()
 {
-	drawtext(L"Fuck you @ 2010/11/23 14:47");
+	drawtext(L"Fuck you @ 2010/11/23 16:08");
 	return 0;
 }
 
