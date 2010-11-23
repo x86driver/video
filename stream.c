@@ -25,6 +25,23 @@
 
 #include <linux/videodev2.h>
 
+#include <ft2build.h>
+#include <freetype2/freetype/freetype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <wchar.h>
+#include <time.h>
+
+#define START_X 500
+#define START_Y 25
+#define FONT_SIZE 16
+
+FT_Library library;
+FT_Face face;
+FT_GlyphSlot slot;
+FT_Vector pen;
+
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
 typedef enum {
@@ -62,6 +79,74 @@ FILE *out;
 struct RGB *image;
 struct RGB *image_ptr;
 
+void draw_bitmap( FT_Bitmap*  bitmap,
+		  FT_Int      x,
+		  FT_Int      y)
+{
+	FT_Int  i, j, p, q;
+	FT_Int  x_max = x + bitmap->width;
+	FT_Int  y_max = y + bitmap->rows;
+
+
+	for ( i = x, p = 0; i < x_max; i++, p++ )
+	{
+		for ( j = y, q = 0; j < y_max; j++, q++ )
+		{
+			if ( i >= global_width || j >= global_height )
+			  continue;
+
+			image[j*global_width+i].r = bitmap->buffer[q * bitmap->width + p];
+			image[j*global_width+i].g = image[j*global_width+i].r;
+		}
+	}
+}
+
+void drawtext(wchar_t *text)
+{
+	setlocale(LC_CTYPE, "zh_TW.UTF-8");
+
+	FT_Init_FreeType( &library );
+	FT_New_Face( library, "courier.ttf", 0, &face );
+	FT_Set_Char_Size( face, 0, FONT_SIZE * 64,
+			  100, 100 );
+
+	slot = face->glyph;
+
+	pen.x = START_X * 64;
+	pen.y = ( global_height - START_Y ) * 64;
+
+	FT_Error error = FT_Select_Charmap( face, FT_ENCODING_UNICODE);
+	if ( error != 0 ) {
+		printf("select font error");
+		perror("select font");
+		exit(1);
+	}
+
+	int num_chars, n;
+	num_chars = wcslen( text );
+
+	for ( n = 0; n < num_chars; ++n )
+	{
+		FT_Set_Transform( face, NULL, &pen );
+		FT_Load_Char( face, text[n], FT_LOAD_RENDER );
+
+		draw_bitmap( &slot->bitmap,
+			     slot->bitmap_left,
+			     global_height - slot->bitmap_top );
+
+		pen.x += slot->advance.x;
+		pen.y += slot->advance.y;
+	}
+
+	// move to new line
+	pen.y -= FONT_SIZE *2 * 64;
+	pen.x  = 50 * 64;
+
+
+	FT_Done_Face(face);
+	FT_Done_FreeType(library);
+}
+
 inline void my_fwrite(const void *ptr)
 {
 	*image_ptr++ = *(struct RGB*)ptr;
@@ -69,6 +154,12 @@ inline void my_fwrite(const void *ptr)
 
 inline void my_fflush(void *ptr)
 {
+	wchar_t text[80];
+	time_t t = time(NULL);
+	struct tm *tm = localtime(&t);
+	swprintf(text, sizeof(text)/sizeof(wchar_t), L"fuck you @ %02d:%02d:%02d",
+		tm->tm_hour, tm->tm_min, tm->tm_sec);
+	drawtext(text);
 	fwrite((void*)image, global_width*global_height*3, 1, out);
 	fflush(ptr);
 }

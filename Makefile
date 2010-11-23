@@ -60,7 +60,7 @@ play:play.c
 	$(ARMCC) -Wall -O2 -o $@ $< $(CFLAGS)
 
 stream:stream.c
-	$(CC) -Wall -g -o $@ $< $(CFLAGS)
+	$(CC) -Wall -g -o $@ $< $(CFLAGS) `freetype-config --libs --cflags`
 
 free:free.c
 	$(CC) -Wall `freetype-config --libs --cflags` -o $@ $< -g
