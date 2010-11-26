@@ -33,7 +33,7 @@
 #include <wchar.h>
 #include <time.h>
 
-#define START_X 500
+#define START_X 510
 #define START_Y 25
 #define FONT_SIZE 16
 
@@ -157,8 +157,8 @@ inline void my_fflush(void *ptr)
 	wchar_t text[80];
 	time_t t = time(NULL);
 	struct tm *tm = localtime(&t);
-	swprintf(text, sizeof(text)/sizeof(wchar_t), L"fuck you @ %02d:%02d:%02d",
-		tm->tm_hour, tm->tm_min, tm->tm_sec);
+	swprintf(text, sizeof(text)/sizeof(wchar_t), L"Fuck @ %d/%d %02d:%02d:%02d",
+		tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 	drawtext(text);
 	fwrite((void*)image, global_width*global_height*3, 1, out);
 	fflush(ptr);
