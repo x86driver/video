@@ -22,3 +22,8 @@ rgbconv
 play
 *.rgb
 deinterlace
+stream
+*.ttf
+*.TTF
+*.exe
+free

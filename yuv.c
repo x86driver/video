@@ -5,14 +5,14 @@ struct RGB {
 } __attribute__((packed));
 
 struct YUV {
-//	unsigned char y1, u, y2, v; //ok in Notebook
-	unsigned char u, y1, v, y2;
+	unsigned char y1, u, y2, v; //ok in Notebook
+//	unsigned char u, y1, v, y2;
 } __attribute__((packed));
 
 int main()
 {
 	FILE *out = fopen("out2.raw", "wb");
-	FILE *in = fopen("out.raw", "rb");
+	FILE *in = fopen("my0.raw", "rb");
 
 	struct RGB rgb;
 	struct YUV yuv;

@@ -1,4 +1,4 @@
 *list* 列出裝置的能力
 *v* 從卡賣啦抓一張圖片到 my.raw
 *yuv* 把 my.raw (YUV) 轉成 out.raw (RGB)
-
+*stream* 連續抓圖片存到 out2.raw, 可用 YUVTools 播放 (RGB)

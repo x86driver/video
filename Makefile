@@ -1,4 +1,4 @@
-TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv rgb565 rgbconv resize c play deinterlace
+TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv rgb565 rgbconv resize c play stream free deinterlace
 ARMCC=arm-none-linux-gnueabi-gcc
 CC=gcc
 CFLAGS=-static
@@ -6,7 +6,7 @@ CFLAGS=-static
 all:$(TARGET)
 
 v:v.c
-	$(ARMCC) -Wall -o $@ $< $(CFLAGS) -O2
+	$(CC) -Wall -o $@ $< $(CFLAGS)
 
 list:list.c
 	$(ARMCC) -Wall -o $@ $< $(CFLAGS)
@@ -61,6 +61,12 @@ play:play.c
 
 deinterlace:deinterlace.c
 	$(CC) -Wall -o $@ $< -g
+
+stream:stream.c
+	$(CC) -Wall -g -o $@ $< $(CFLAGS) `freetype-config --libs --cflags`
+
+free:free.c
+	$(CC) -Wall `freetype-config --libs --cflags` -o $@ $< -g
 
 clean:
 	rm -rf $(TARGET) *.raw

@@ -7,8 +7,8 @@ struct RGB {
 
 int main()
 {
-	unsigned int x = 720;
-	unsigned int y = 240;
+	unsigned int x = 800;
+	unsigned int y = 600;
 
 	FILE *fp = fopen("my.raw", "rb");
 	FILE *out = fopen("out.raw", "wb");
