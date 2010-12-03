@@ -20,3 +20,5 @@ c
 resize
 rgbconv
 play
+*.rgb
+deinterlace
