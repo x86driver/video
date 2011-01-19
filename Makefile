@@ -1,4 +1,4 @@
-TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv rgb565 rgbconv resize c play stream free deinterlace
+TARGET = v list yuv frame show eav parse parse2 fake trans overlay seq conv rgb565 rgbconv resize c play stream free deinterlace rgb
 ARMCC=arm-none-linux-gnueabi-gcc
 CC=gcc
 CFLAGS=-static
@@ -67,6 +67,9 @@ stream:stream.c
 
 free:free.c
 	$(CC) -Wall `freetype-config --libs --cflags` -o $@ $< -g
+
+rgb:rgb.c
+	$(CC) -Wall -o $@ $<
 
 clean:
 	rm -rf $(TARGET) *.raw
