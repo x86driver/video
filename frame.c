@@ -29,9 +29,10 @@ int main(int argc, char **argv)
 	ioctl(fd, FBIOGET_VSCREENINFO, &screeninfo);
 	int width = screeninfo.xres;
 	int height = screeninfo.yres;
+	int pixel = screeninfo.bits_per_pixel;
 
 	int x, y;
-	printf("x: %d, y: %d, pixel: %d\n", width, height, screeninfo.bits_per_pixel);
+	printf("x: %d, y: %d, pixel: %d\n", width, height, pixel);
 
 
 	unsigned char *data = (unsigned char *)mmap(NULL, width*height*(screeninfo.bits_per_pixel/8),
@@ -42,12 +43,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	FILE *fp = fopen(argv[1], "rb");
+	FILE *fp = fopen(argv[1], "wb");
 	if (!fp) {
 		perror("fopen");
 		exit(1);
 	}
-	fread(data, 480*240*2, 1, fp);
+	fwrite(data, width*height*(pixel/8), 1, fp);
 	fclose(fp);
 /*
 	for (x = 0; x < height; ++x) {
